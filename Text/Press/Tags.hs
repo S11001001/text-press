@@ -11,9 +11,6 @@ import Control.Monad.Trans (lift, liftIO)
 import Control.Monad (forM_)
 
 import Text.Press.Parser
-import Control.Monad.Trans (lift, liftIO)
-
-import Text.Press.Parser
 import Text.Press.Render
 import Text.Press.Types
 

@@ -1,9 +1,10 @@
 module Text.Press.Run where
 
-import Control.Monad.State
+import Control.Monad.State hiding (forM_)
 import Control.Monad.Error (runErrorT, ErrorT)
 import Control.Monad.Error.Class (throwError)
-import Control.Monad.Writer.Lazy
+import Control.Monad.Writer.Lazy hiding (forM_)
+import Data.Foldable (forM_)
 import Prelude hiding (lookup)
 
 import Data.Map (insert, lookup)
@@ -73,8 +74,6 @@ addToTemplateCache template = do
                 Right tmpl -> do 
                     let mapping' = insert template tmpl mapping 
                     put $ parser {parserTemplateCache = mapping'}
-                    case tmplExtends tmpl of
-                        Nothing -> return ()
-                        Just s -> addToTemplateCache s
+                    forM_ (tmplExtends tmpl) addToTemplateCache
 
 defaultParser = newParser { parserTagTypes = defaultTagTypes }
