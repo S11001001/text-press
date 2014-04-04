@@ -31,7 +31,7 @@ runJSValuesWithPathStTErrT datas templateName = do
     lift $ evalStateT (execWriterT doRender) st
 
 runJSValuesWithBody :: [JSValue] -> String -> IO Result
-runJSValuesWithBody jsvalues body = do 
+runJSValuesWithBody jsvalues body =
     case parseString defaultParser body of
         Left parsecError -> return $ Left $ ParseError parsecError
         Right template -> runErrorT $ evalStateT (runJSValuesWithTemplateStTErrT jsvalues template) defaultParser

@@ -64,7 +64,7 @@ parseFile parser filename = do
                 Right tokens -> Parsec.Prim.runParser tokensToTemplate (parser, newTemplate) filename tokens
 
 parseString :: Parser -> String -> Either Parsec.ParseError Template
-parseString parser string = do
+parseString parser string =
     case Parsec.Prim.runParser intermediateParser () "" string of
         Left err -> Left err
         Right tokens -> Parsec.Prim.runParser tokensToTemplate (parser, newTemplate) "" tokens
@@ -136,8 +136,7 @@ spaces = many1 space
 runParseTagExpressions input = runSubParser parseTagExpressions () input
     where parseTagExpressions = do 
               optional spaces
-              exprs <- (choice [try pStr, try pVar]) `sepEndBy` spaces
-              return exprs 
+              (choice [try pStr, try pVar]) `sepEndBy` spaces
           pStr = fmap ExprStr $ between "\"" "\""
           pVar = fmap ExprVar $ identifier
 

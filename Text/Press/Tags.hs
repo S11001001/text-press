@@ -61,7 +61,7 @@ ifTag name rest = do
             let token = fst tokenPos
             let ifs' = ifs ++ [(e, nodes)]
             case token of
-                (PTag "endif" rest) -> do
+                (PTag "endif" rest) ->
                     return $ Just $ Tag "if" $ TagFunc $ showIfElse ifs' []
                 (PTag "elif" rest) -> do
                     e' <- parseIfExpr rest
@@ -88,7 +88,7 @@ manyTill' p1 p2 = scan
 
 -- Evaluate an expression to a boolean suitable for an If clase
 exprToBool :: Expr -> RenderT Bool
-exprToBool expr = do
+exprToBool expr =
     case expr of
        ExprStr s -> return $ length s > 0
        ExprNum num -> return $ num > 0
@@ -114,7 +114,7 @@ forTag name rest = do
         PTag "else" _ -> do
             elseNodes <- fmap catMaybes $ manyTill pNode (tagNamed "endfor")
             return $ Just $ Tag "for" $ TagFunc $ showFor target sourceExpr forNodes elseNodes
-        PTag "endfor" _ -> do
+        PTag "endfor" _ ->
             return $ Just $ Tag "for" $ TagFunc $ showFor target sourceExpr forNodes []
 
     where
