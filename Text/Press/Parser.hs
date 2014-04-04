@@ -122,7 +122,7 @@ strip = f . f
 handleParsecError e = error (show e)
 
 failWithParseError :: (Parsec.Prim.Stream s m t) => Parsec.Error.ParseError -> Parsec.Prim.ParsecT s u m a
-failWithParseError parseError = Parsec.Prim.ParsecT $ 
+failWithParseError parseError = Parsec.Prim.mkPT $ 
     \s -> return $ Parsec.Prim.Empty $ return $ Parsec.Prim.Error parseError
 
 runSubParser parser state input = do
