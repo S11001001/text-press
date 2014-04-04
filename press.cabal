@@ -9,7 +9,7 @@ Author:              Brandon Bickford <bickfordb@gmail.com>
 Maintainer:          bickfordb@gmail.com
 Homepage:            http://github.com/bickfordb/text-press
 Build-Type:          Simple
-Cabal-Version:       >= 1.6
+Cabal-Version:       >= 1.8
 
 Source-Repository head
   Type: git
@@ -28,3 +28,17 @@ Library
     Text.Press.Tags,
     Text.Press.Run,
     Text.Press.Types
+
+Test-Suite unit-tests-and-properties
+  Type:              exitcode-stdio-1.0
+  Main-Is:           PressTest.hs
+  Hs-Source-Dirs:    tests
+  Build-Depends:
+    base,
+    json,
+    HUnit >= 1.2,
+    QuickCheck >= 2.4,
+    test-framework >= 0.6,
+    test-framework-hunit >= 0.3,
+    test-framework-quickcheck2 >= 0.2,
+    press
