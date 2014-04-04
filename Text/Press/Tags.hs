@@ -87,7 +87,7 @@ manyTill' p1 p2 = scan
 exprToBool :: Expr -> RenderT Bool
 exprToBool expr =
     case expr of
-       ExprStr s -> return $ length s > 0
+       ExprStr s -> return $ not (null s)
        ExprNum num -> return $ num > 0
        ExprVar var -> do
             maybeVal <- lookupVarM var

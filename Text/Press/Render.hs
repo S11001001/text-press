@@ -89,6 +89,6 @@ coerceJSToBool :: JSValue -> Bool
 coerceJSToBool JSNull = False 
 coerceJSToBool (JSBool bool) = bool
 coerceJSToBool (JSRational sign r) = (not sign) && (r > 0)
-coerceJSToBool (JSString x) = length (fromJSString x) > 0
-coerceJSToBool (JSArray vals) = length vals > 0
-coerceJSToBool (JSObject obj) = length (fromJSObject obj) > 0
+coerceJSToBool (JSString x) = not (null (fromJSString x))
+coerceJSToBool (JSArray vals) = not (null vals)
+coerceJSToBool (JSObject obj) = not (null (fromJSObject obj))
