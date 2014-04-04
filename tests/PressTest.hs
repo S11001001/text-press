@@ -47,7 +47,7 @@ tests = [
         ]
     ]
 
-testParseEmpty = assertParseFile "test-data/empty.html" >> return ()
+testParseEmpty = assertParseFile "tests/test-data/empty.html" >> return ()
 
 assertParseFile f = assertRight $ parseFile defaultParser f
 assertRight action = do
