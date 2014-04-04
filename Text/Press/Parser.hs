@@ -59,15 +59,13 @@ parseVar = withPos $ fmap PVar $ between "{{" "}}"
 parseFile :: Parser -> String -> IO (Either Parsec.ParseError Template)
 parseFile parser filename = do
     eitherTokens <- parseFromFile intermediateParser filename    
-    return $ case eitherTokens of
-                Left err -> Left err
-                Right tokens -> Parsec.Prim.runParser tokensToTemplate (parser, newTemplate) filename tokens
+    return $ either Left (Parsec.Prim.runParser tokensToTemplate (parser, newTemplate) filename) eitherTokens
 
 parseString :: Parser -> String -> Either Parsec.ParseError Template
 parseString parser string =
-    case Parsec.Prim.runParser intermediateParser () "" string of
-        Left err -> Left err
-        Right tokens -> Parsec.Prim.runParser tokensToTemplate (parser, newTemplate) "" tokens
+    either Left
+           (Parsec.Prim.runParser tokensToTemplate (parser, newTemplate) "")
+         $ Parsec.Prim.runParser intermediateParser () "" string
 
 
 tokensToTemplate :: Parsec [(Token, SourcePos)] ParserState Template 
@@ -127,9 +125,8 @@ failWithParseError parseError = Parsec.Prim.mkPT $
 
 runSubParser parser state input = do
     name <- fmap sourceName getPosition
-    case Parsec.Prim.runParser parser state name input of
-        Left parseError -> failWithParseError parseError
-        Right tokens -> return tokens
+    either failWithParseError return $
+      Parsec.Prim.runParser parser state name input
 
 spaces = many1 space
 
