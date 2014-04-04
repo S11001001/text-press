@@ -9,7 +9,11 @@ Author:              Brandon Bickford <bickfordb@gmail.com>
 Maintainer:          bickfordb@gmail.com
 Homepage:            http://github.com/bickfordb/text-press
 Build-Type:          Simple
-Cabal-Version:       >= 1.2
+Cabal-Version:       >= 1.6
+
+Source-Repository head
+  Type: git
+  Location: git://github.com/bickfordb/text-press.git
 
 Library
   Build-Depends:
