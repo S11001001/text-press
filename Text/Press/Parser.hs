@@ -2,6 +2,7 @@
 module Text.Press.Parser where
 import Data.Char (isSpace)
 import Data.Either (Either(..))
+import Data.Functor ((<$>))
 import Data.Map (fromList, Map, lookup, insert)
 import Data.Maybe (catMaybes, listToMaybe)
 import Prelude hiding (lookup)
@@ -54,7 +55,7 @@ identifier = do
     s <- Parsec.Prim.many (choice [alphaNum, oneOf "_"])
     return (l:s)
 
-parseVar = withPos $ fmap PVar $ between "{{" "}}"
+parseVar = withPos $ PVar <$> between "{{" "}}"
 
 parseFile :: Parser -> String -> IO (Either Parsec.ParseError Template)
 parseFile parser filename = do
@@ -70,7 +71,7 @@ parseString parser string =
 
 tokensToTemplate :: Parsec [(Token, SourcePos)] ParserState Template 
 tokensToTemplate = do 
-    nodes <- fmap catMaybes $ Parsec.Prim.many pNode 
+    nodes <- catMaybes <$> Parsec.Prim.many pNode 
     (p, t) <- getState
     return $ t {tmplNodes=nodes}
 
@@ -134,7 +135,7 @@ runParseTagExpressions input = runSubParser parseTagExpressions () input
     where parseTagExpressions = do 
               optional spaces
               (choice [try pStr, try pVar]) `sepEndBy` spaces
-          pStr = fmap ExprStr $ between "\"" "\""
-          pVar = fmap ExprVar $ identifier
+          pStr = ExprStr <$> between "\"" "\""
+          pVar = ExprVar <$> identifier
 
 

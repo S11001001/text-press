@@ -5,6 +5,7 @@ import Control.Monad.Error (runErrorT, ErrorT)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Writer.Lazy hiding (forM_)
 import Data.Foldable (forM_)
+import Data.Functor ((<$>))
 import Prelude hiding (lookup)
 
 import Data.Map (insert, lookup)
@@ -23,7 +24,7 @@ runJSValuesWithPathStTErrT ::  [JSValue] -> String -> StateT Parser (ErrorT Pres
 runJSValuesWithPathStTErrT datas templateName = do
     addToTemplateCache templateName
     parser <- get
-    template <- fmap head $ lookupTemplates templateName
+    template <- head <$> lookupTemplates templateName
     let st = RenderState {
         renderStateParser = parser,
         renderStateTemplate = template,

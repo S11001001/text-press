@@ -3,6 +3,7 @@
 module Text.Press.Tags where
 import Text.JSON.Types
 
+import Data.Functor ((<$>))
 import Data.Map (fromList, insert)
 import Data.Maybe (catMaybes)
 import qualified Text.Parsec.Prim as Parsec.Prim
@@ -28,7 +29,7 @@ blockTag name rest = do
     blockName <- case exprs of
         (ExprVar var : xs) -> return var
         otherwise -> Parsec.Prim.unexpected (show otherwise)
-    nodes <- fmap catMaybes $ manyTill pNode (tagNamed "endblock")
+    nodes <- catMaybes <$> manyTill pNode (tagNamed "endblock")
     Parsec.Prim.modifyState $ \(parser, tmpl) -> (parser,
         tmpl {tmplBlocks = insert blockName nodes (tmplBlocks tmpl)})
     return $ Just $ Tag "block" $ TagFunc $ showBlock blockName
@@ -64,7 +65,7 @@ ifTag name rest = do
                     e' <- parseIfExpr rest
                     scan ifs' e'
                 (PTag "else" rest) -> do
-                    nodes <- fmap catMaybes $ manyTill pNode (tagNamed "endif")
+                    nodes <- catMaybes <$> manyTill pNode (tagNamed "endif")
                     return $ Just $ Tag "if" $ TagFunc $ showIfElse ifs' nodes
                 otherwise -> Parsec.Prim.unexpected "unexpected tag"
         parseIfExpr s = do
@@ -109,7 +110,7 @@ forTag name rest = do
     let forNodes = catMaybes maybeNodes
     case token of
         PTag "else" _ -> do
-            elseNodes <- fmap catMaybes $ manyTill pNode (tagNamed "endfor")
+            elseNodes <- catMaybes <$> manyTill pNode (tagNamed "endfor")
             return $ Just $ Tag "for" $ TagFunc $ showFor target sourceExpr forNodes elseNodes
         PTag "endfor" _ ->
             return $ Just $ Tag "for" $ TagFunc $ showFor target sourceExpr forNodes []
@@ -130,7 +131,7 @@ forTag name rest = do
 
 showFor :: String -> Expr -> [Node] -> [Node] -> RenderT_
 showFor target sourceExpr forNodes elseNodes = do
-        sourceValues <- fmap toList $ toJS sourceExpr
+        sourceValues <- toList <$> toJS sourceExpr
         runFor sourceValues
     where
         runFor [] = mapM_ render elseNodes
