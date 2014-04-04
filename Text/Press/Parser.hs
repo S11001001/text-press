@@ -11,16 +11,14 @@ import qualified Text.Parsec as Parsec
 import qualified Text.Parsec.Error as Parsec.Error
 import Text.Parsec.Char (string, anyChar, space, alphaNum, letter, oneOf)
 import Text.Parsec.String (parseFromFile)
-import Text.Parsec.Combinator (manyTill, many1, notFollowedBy, choice, eof, lookAhead, optional, sepEndBy)
+import Text.Parsec.Combinator (lookAhead)
 import Text.Parsec.Pos (SourcePos, sourceName)
 import Text.Parsec.Prim ((<|>), try, Parsec, getPosition, getState)
 import qualified Text.Parsec.Prim as Parsec.Prim
+import Text.Parser.Combinators (choice, eof, manyTill, notFollowedBy, optional, sepEndBy, skipMany, some)
 
 import Text.Press.Types
 import Text.Press.Render 
-
-skipMany p = scan
-    where scan = (p >> scan) <|> return ()
 
 intermediateParser = manyTill intermediate eof 
     
@@ -129,7 +127,7 @@ runSubParser parser state input = do
     either failWithParseError return $
       Parsec.Prim.runParser parser state name input
 
-spaces = many1 space
+spaces = some space
 
 runParseTagExpressions input = runSubParser parseTagExpressions () input
     where parseTagExpressions = do 
