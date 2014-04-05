@@ -1,8 +1,18 @@
-module Text.Press.Run where
+{-# LANGUAGE FlexibleContexts #-}
+module Text.Press.Run
+  (
+  -- * Template rendering
+    runJSValuesWithBody
+  , runJSValuesWithPath
+  -- * Template parsing
+  , defaultParser
+  , addToTemplateCache
+  , lookupTemplates
+  ) where
 
 import Control.Monad.State hiding (forM_)
 import Control.Monad.Error (runErrorT, ErrorT)
-import Control.Monad.Error.Class (throwError)
+import Control.Monad.Error.Class (MonadError, throwError)
 import Control.Monad.Writer.Lazy hiding (forM_)
 import Data.Foldable (forM_)
 import Data.Functor ((<$>))
@@ -41,6 +51,7 @@ runJSValuesWithBody jsvalues body =
 runJSValuesWithTemplate :: [JSValue] -> Template -> Parser -> IO Result
 runJSValuesWithTemplate jsvalues template parser = runErrorT $ evalStateT (runJSValuesWithTemplateStTErrT jsvalues template) parser
 
+-- | The lowest-level runJSValues* function.
 runJSValuesWithTemplateStTErrT :: [JSValue] -> Template -> StateT Parser (ErrorT PressError IO) [String]
 runJSValuesWithTemplateStTErrT jsvalues template = do
     case tmplExtends template of 
@@ -53,6 +64,8 @@ runJSValuesWithTemplateStTErrT jsvalues template = do
         renderStateValues = jsvalues
     }
 
+lookupTemplates :: (MonadError PressError m, MonadState Parser m)
+                => TemplatePath -> m [Template]
 lookupTemplates templateName = do
     parser <- get
     case lookup templateName (parserTemplateCache parser) of
@@ -63,6 +76,7 @@ lookupTemplates templateName = do
                 return $ template : xs
         Nothing -> throwError $ PressError $ "unexpected uncached template: " ++ (show templateName)
 
+addToTemplateCache :: (MonadIO m, MonadState Parser m) => TemplatePath -> m ()
 addToTemplateCache template = do
     parser <- get
     let mapping = parserTemplateCache parser
@@ -77,4 +91,7 @@ addToTemplateCache template = do
                     put $ parser {parserTemplateCache = mapping'}
                     forM_ (tmplExtends tmpl) addToTemplateCache
 
+-- | A whole-template 'Parser', with 'defaultTagTypes' defined, for
+-- use with 'parseFile' or 'parseString'.
+defaultParser :: Parser
 defaultParser = newParser { parserTagTypes = defaultTagTypes }
