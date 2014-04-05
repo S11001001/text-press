@@ -13,8 +13,10 @@ module Text.Press.Parser
   , strip
   ) where
 
+import Control.Applicative ((<|>), (*>))
 import Data.Char (isSpace)
 import Data.Either (Either(..))
+import Data.Function (on)
 import Data.Functor ((<$>))
 import Data.Map (fromList, Map, lookup, insert)
 import Data.Maybe (catMaybes, listToMaybe)
@@ -22,13 +24,13 @@ import Prelude hiding (lookup)
 
 import qualified Text.Parsec as Parsec
 import qualified Text.Parsec.Error as Parsec.Error
-import Text.Parsec.Char (string, anyChar, space, alphaNum, letter, oneOf)
 import Text.Parsec.String (parseFromFile)
-import Text.Parsec.Combinator (lookAhead)
 import Text.Parsec.Pos (SourcePos, sourceName)
-import Text.Parsec.Prim ((<|>), try, Parsec, getPosition, getState)
+import Text.Parsec.Prim (Parsec, getPosition, getState)
 import qualified Text.Parsec.Prim as Parsec.Prim
-import Text.Parser.Combinators (choice, eof, manyTill, notFollowedBy, optional, sepEndBy, skipMany, some)
+import Text.Parser.Char (alphaNum, anyChar, letter, oneOf, space, string)
+import Text.Parser.Combinators (choice, eof, many, manyTill, notFollowedBy, optional, sepEndBy, skipMany, some, try)
+import Text.Parser.LookAhead (lookAhead)
 
 import Text.Press.Types
 import Text.Press.Render 
@@ -39,13 +41,13 @@ intermediate = choice [try parseTag, try parseVar, someText]
 
 someText = withPos $ fmap PText someText' 
     where someText' = (choice [check $ string "{{", check $ string "{%", check eof]) <|> succ
-          check p = (lookAhead $ try p) >> return []
+          check p = (lookAhead $ try p) *> return []
           succ = do 
             c <- anyChar
             xs <- someText'
             return $ c : xs
 
-between left right = string left >> manyTill anyChar (string right)
+between left right = string left *> manyTill anyChar (string right)
 
 withPos action = do 
     p <- getPosition
@@ -63,7 +65,7 @@ parseTag = withPos $ do
 
 identifier = do 
     l <- choice [letter, oneOf "_"]
-    s <- Parsec.Prim.many (choice [alphaNum, oneOf "_"])
+    s <- many (choice [alphaNum, oneOf "_"])
     return (l:s)
 
 parseVar = withPos $ PVar <$> between "{{" "}}"
@@ -82,7 +84,7 @@ parseString parser string =
 
 tokensToTemplate :: Parsec [(Token, SourcePos)] ParserState Template 
 tokensToTemplate = do 
-    nodes <- catMaybes <$> Parsec.Prim.many pNode 
+    nodes <- catMaybes <$> many pNode 
     (p, t) <- getState
     return $ t {tmplNodes=nodes}
 
@@ -128,8 +130,6 @@ isText otherwise = False
 
 strip = f . f
     where f = reverse . dropWhile isSpace
-
-handleParsecError e = error (show e)
 
 failWithParseError :: (Parsec.Prim.Stream s m t) => Parsec.Error.ParseError -> Parsec.Prim.ParsecT s u m a
 failWithParseError parseError = Parsec.Prim.mkPT $ 
