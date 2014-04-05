@@ -91,7 +91,8 @@ templateStack = getTemplate >>= templateStack'
                     return $ t : (template : templates)
                 Nothing -> throwError $ PressError $ "expecting a template in the cache named: " ++ (show name)
 
-
+-- | Render the environment's template with the environment's defined
+-- variables.
 doRender :: RenderT ()
 doRender = do 
     bodyNodes <- fmap (tmplNodes . last) templateStack
