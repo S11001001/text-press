@@ -1,4 +1,27 @@
-module Text.Press.Types where 
+module Text.Press.Types
+  (
+  -- * Templates
+    Template(..)
+  , Node(..)
+  , TagFunc(..)
+  , PressError(..)
+  , newTemplate
+  -- * Parser processes
+  , ParserState
+  , Parser(..)
+  , Expr(..)
+  , Token(..)
+  , TagType(..)
+  , newParser
+  -- * Render processes
+  , Render
+  , render
+  , RenderT
+  , RenderT_
+  , RenderState(..)
+  , getRenderState
+  , setRenderState
+  ) where 
 
 import Control.Monad.Error (ErrorT, Error)
 import Control.Monad.Error.Class 
