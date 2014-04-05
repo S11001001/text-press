@@ -15,8 +15,7 @@ module Text.Press.Types
   , TagType(..)
   , newParser
   -- * Render processes
-  , Render
-  , render
+  , Render(..)
   , RenderT
   , RenderT_
   , RenderState(..)
@@ -43,6 +42,7 @@ data RenderState = RenderState {
     renderStateValues :: [JSValue]
 }
 
+-- | An error that occurred during template parsing or rendering.
 data PressError = PressError String
     | ParseError Text.Parsec.Error.ParseError
     | RenderError String
@@ -68,8 +68,11 @@ getRenderState = get
 setRenderState :: RenderState -> RenderT ()
 setRenderState = put
 
-data TagFunc = TagFunc RenderT_
+-- | Rendering functions get stored in the template state; this marks
+-- those functions so we can 'show' them and 'render' them.
+newtype TagFunc = TagFunc RenderT_
 
+-- | An element of the parsed template tree.
 data Node = Var String
     | Tag TagName TagFunc
     | Text String
@@ -78,8 +81,10 @@ data Node = Var String
 instance Show TagFunc where
     show s = "TagFunc ?"
 
+-- | The lookup key of 'parserTemplateCache'.
 type TemplatePath = String
 
+-- | A parsed Jinja template.
 data Template = Template {
     tmplExtends :: Maybe TemplatePath,
     tmplBlocks :: Map String [Node],
@@ -87,35 +92,55 @@ data Template = Template {
     tmplFilename :: String
 } deriving (Show) 
 
+-- | An empty 'Template'.
 newTemplate = Template Nothing (fromList []) [] "" 
 
 type TagName = String
 type TemplateParser a = Prim.Parsec [(Token, SourcePos)] ParserState a
 type NodeParser = TemplateParser (Maybe Node)
-data TagType = TagType (TagName -> String -> NodeParser)
+
+-- | Configurable member of 'parserTagTypes' for parsing arguments to
+-- one particular tag.
+newtype TagType = TagType (TagName -> String -> NodeParser)
+
+-- | An argument to a 'Tag'.
 data Expr = ExprStr String
     | ExprVar String
     | ExprNum Double
     deriving (Ord, Eq, Show)
 
+-- | State of 'TemplateParser'.
 type ParserState = (Parser, Template)
 
 instance Show TagType where
     show s = "TagType ?"
 
+-- | An 'Expr' with unresolved 'Tag's.
 data Token = PText String 
     | PTag TagName String
     | PVar String
     deriving (Ord, Show, Eq)
 
+-- | Configuration for parsing a particular template.
 data Parser = Parser {
+    -- | All defined tags, e.g. "extends", "for".  A sensible default
+    -- is 'Text.Press.Tags.defaultTagTypes'; merge that with your own
+    -- additions to extend the default set.
     parserTagTypes :: Map TagName TagType,
+    -- | Unused.
     parserSearchPaths :: [String],
+    -- | A cache where 'Text.Press.Run.runJSValuesWithBody' et al look
+    -- for already-parsed templates.
     parserTemplateCache :: Map TemplatePath Template 
 } deriving (Show)
 
+-- | Types that can be rendered as part of a template rendering
+-- process.
 class Render a where
+    -- | Write strings representing the argument to the writer part of
+    -- the 'RenderT_' stack.
     render :: a -> RenderT_
 
+-- | An empty 'Parser'.
 newParser = Parser (fromList []) [] (fromList [])
 
