@@ -1,14 +1,14 @@
 
 module Text.Press.Parser
   ( 
-  -- * Whole template parsers
-    parseFile
-  , parseString
-  , runParseTagExpressions
   -- * Template element parsers
+    runParseTagExpressions
   , pNode
   , tagNamed
   , tagNamedOneOf
+  -- * Parser utilities
+  , parseFile
+  , parseString
   -- * String utilities
   , strip
   ) where
