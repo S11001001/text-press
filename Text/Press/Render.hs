@@ -58,6 +58,7 @@ split tok splitme = unfoldr (sp1 tok) splitme
                       Just p -> Just (take ((length p) - (length t)) p,
                                       drop (length p) s)
 
+getf :: String -> JSValue -> Maybe JSValue
 getf name a = getf' names (Just a)
     where 
         names = split "." name 

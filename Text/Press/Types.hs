@@ -17,12 +17,14 @@ module Text.Press.Types
   , TagFunc(..)
   , PressError(..)
   , newTemplate
+  -- * Custom tags
+  , TagName
+  , TagType(..)
   -- * Parser processes
   , ParserState
   , Parser(..)
   , Expr(..)
   , Token(..)
-  , TagType(..)
   , newParser
   -- * Render processes
   , Render(..)

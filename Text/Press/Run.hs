@@ -29,6 +29,7 @@ import Text.Press.Tags
 
 type Result = Either PressError [String]
 
+runJSValuesWithPath :: [JSValue] -> String -> IO (Either PressError [String])
 runJSValuesWithPath datas templateName = runErrorT $ evalStateT (runJSValuesWithPathStTErrT datas templateName) defaultParser
 
 runJSValuesWithPathStTErrT ::  [JSValue] -> String -> StateT Parser (ErrorT PressError IO) [String]

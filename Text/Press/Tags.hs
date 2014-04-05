@@ -4,7 +4,7 @@ module Text.Press.Tags where
 import Text.JSON.Types
 
 import Data.Functor ((<$>))
-import Data.Map (fromList, insert)
+import Data.Map (Map, fromList, insert)
 import Data.Maybe (catMaybes)
 import qualified Text.Parsec.Prim as Parsec.Prim
 import Text.Parser.Combinators (manyTill, unexpected)
@@ -33,7 +33,8 @@ blockTag name rest = do
         tmpl {tmplBlocks = insert blockName nodes (tmplBlocks tmpl)})
     return $ Just $ Tag "block" $ TagFunc $ showBlock blockName
 
--- This is mapping of all of the default tag types. 
+-- | This is mapping of all of the default tag types. 
+defaultTagTypes :: Map String TagType
 defaultTagTypes = (fromList [
     ("extends", TagType extendsTag),
     ("block", TagType blockTag),

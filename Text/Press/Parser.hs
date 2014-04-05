@@ -108,22 +108,28 @@ tag = token' $ toMaybe $ isTag . fst
 tagNamed name = token' $ toMaybe $ (isTagNamed name) . fst
 tagNamedOneOf name = token' $ toMaybe $ (isTagNamedOneOf name) . fst
 
+toMaybe :: (a -> Bool) -> a -> Maybe a
 toMaybe f tokpos = if (f tokpos) then Just tokpos else Nothing
 
+isVar :: Token -> Bool
 isVar (PVar _) = True
 isVar _ = False
 
+isTag :: Token -> Bool
 isTag (PTag _ _) = True
 isTag _ = False
 
+isTagNamed :: TagName -> Token -> Bool
 isTagNamed aname tag = isTagNamedOneOf [aname] tag
 
 isTagNamedOneOf names (PTag name _) = name `elem` names
 isTagNamedOneOf _ _ = False
 
+isText :: Token -> Bool
 isText (PText _) = True
 isText _ = False
 
+strip :: String -> String
 strip = f . f
     where f = reverse . dropWhile isSpace
 
