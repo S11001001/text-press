@@ -1,5 +1,18 @@
 
-module Text.Press.Parser where
+module Text.Press.Parser
+  ( 
+  -- * Whole template parsers
+    parseFile
+  , parseString
+  , runParseTagExpressions
+  -- * Template element parsers
+  , pNode
+  , tagNamed
+  , tagNamedOneOf
+  -- * String utilities
+  , strip
+  ) where
+
 import Data.Char (isSpace)
 import Data.Either (Either(..))
 import Data.Functor ((<$>))
