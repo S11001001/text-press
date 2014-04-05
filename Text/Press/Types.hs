@@ -1,3 +1,13 @@
+-- |
+-- Copyright :  (c) 2009 Brandon Bickford, (c) 2014 Stephen Compall
+-- License   :  GPL
+-- Maintainer:  Brandon Bickford <bickfordb@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
+-- These are the types used in template models, parsing, and
+-- rendering.
+
 module Text.Press.Types
   (
   -- * Templates
