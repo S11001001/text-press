@@ -1,6 +1,10 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Text.Press.Tags where
+module Text.Press.Tags
+  (
+  -- * Defined tag types
+    defaultTagTypes
+  ) where
 import Text.JSON.Types
 
 import Data.Functor ((<$>))
