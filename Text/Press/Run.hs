@@ -4,6 +4,7 @@ module Text.Press.Run
   -- * Template rendering
     runJSValuesWithBody
   , runJSValuesWithPath
+  , runJSValuesWithTemplate
   -- * Template parsing
   , defaultParser
   , addToTemplateCache
@@ -19,7 +20,7 @@ import Data.Functor ((<$>))
 import Prelude hiding (lookup)
 
 import Data.Map (insert, lookup)
-import Text.JSON (JSValue, decodeStrict, JSValue(..))
+import Text.JSON (JSValue, JSValue(..))
 
 import Text.Press.Types
 import Text.Press.Parser
@@ -81,7 +82,7 @@ addToTemplateCache template = do
     parser <- get
     let mapping = parserTemplateCache parser
     case lookup template mapping of 
-        Just tmpl -> return ()
+        Just _ -> return ()
         Nothing -> do
             eitherTemplateError <- liftIO $ parseFile parser template
             case eitherTemplateError of

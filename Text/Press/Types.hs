@@ -33,12 +33,11 @@ module Text.Press.Types
   , setRenderState
   ) where 
 
-import Control.Monad.Error (ErrorT, Error)
+import Control.Monad.Error (ErrorT)
 import Control.Monad.Error.Class 
 import Control.Monad.State (StateT, get, put)
-import Control.Monad.Trans (lift)
 import Control.Monad.Writer.Lazy (WriterT)
-import Data.Map (Map, lookup, fromList)
+import Data.Map (Map, fromList)
 
 import qualified Text.Parsec.Prim as Prim
 import qualified Text.Parsec.Error
@@ -89,7 +88,7 @@ data Node = Var String
     deriving (Show)
 
 instance Show TagFunc where
-    show s = "TagFunc ?"
+    show _ = "TagFunc ?"
 
 -- | The lookup key of 'parserTemplateCache'.
 type TemplatePath = String
@@ -103,6 +102,7 @@ data Template = Template {
 } deriving (Show) 
 
 -- | An empty 'Template'.
+newTemplate :: Template
 newTemplate = Template Nothing (fromList []) [] "" 
 
 type TagName = String
@@ -123,7 +123,7 @@ data Expr = ExprStr String
 type ParserState = (Parser, Template)
 
 instance Show TagType where
-    show s = "TagType ?"
+    show _ = "TagType ?"
 
 -- | An 'Expr' with unresolved 'Tag's.
 data Token = PText String 
@@ -152,5 +152,6 @@ class Render a where
     render :: a -> RenderT_
 
 -- | An empty 'Parser'.
+newParser :: Parser
 newParser = Parser (fromList []) [] (fromList [])
 

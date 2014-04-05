@@ -12,7 +12,7 @@ import Control.Monad.State
 import Control.Monad.Writer.Lazy
 import Control.Monad.Error.Class (throwError)
 
-import Data.Map (Map, lookup, fromList, insert)
+import Data.Map (Map, lookup)
 import Data.Maybe (listToMaybe, catMaybes)
 import Prelude hiding (lookup)
 import Data.List hiding (lookup)
@@ -62,9 +62,9 @@ getf name a = getf' names (Just a)
     where 
         names = split "." name 
         getf' [] y = y
-        getf' x Nothing = Nothing
-        getf' (x : xs) obj@(Just (JSObject a)) = getf' xs $ get_field a x
-        getf' x y = Nothing    
+        getf' _ Nothing = Nothing
+        getf' (x : xs) (Just (JSObject a)) = getf' xs $ get_field a x
+        getf' _ _ = Nothing    
 
 -- | Show a block.
 showBlock :: String -> RenderT_ 

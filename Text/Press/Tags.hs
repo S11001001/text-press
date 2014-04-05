@@ -7,8 +7,7 @@ import Data.Functor ((<$>))
 import Data.Map (fromList, insert)
 import Data.Maybe (catMaybes)
 import qualified Text.Parsec.Prim as Parsec.Prim
-import Text.Parser.Combinators (choice, manyTill, unexpected)
-import Control.Monad.Trans (lift, liftIO)
+import Text.Parser.Combinators (manyTill, unexpected)
 import Control.Monad (forM_)
 
 import Text.Press.Parser
@@ -18,8 +17,8 @@ import Text.Press.Types
 extendsTag name rest = do
     exprs <- runParseTagExpressions rest
     include <- case exprs of
-                (ExprStr s : xs) -> return s
-                otherwise -> fail "expecting a string"
+                (ExprStr s : _) -> return s
+                _ -> fail "expecting a string"
     let rest' = Just . strip $ include
     Parsec.Prim.modifyState $ \(parser, tmpl) -> (parser, tmpl {tmplExtends = rest'})
     return $ Nothing
@@ -27,8 +26,8 @@ extendsTag name rest = do
 blockTag name rest = do
     exprs <- runParseTagExpressions rest
     blockName <- case exprs of
-        (ExprVar var : xs) -> return var
-        otherwise -> unexpected (show otherwise)
+        (ExprVar var : _) -> return var
+        _ -> unexpected (show otherwise)
     nodes <- catMaybes <$> manyTill pNode (tagNamed "endblock")
     Parsec.Prim.modifyState $ \(parser, tmpl) -> (parser,
         tmpl {tmplBlocks = insert blockName nodes (tmplBlocks tmpl)})
@@ -44,7 +43,7 @@ defaultTagTypes = (fromList [
     ])
 
 -- Comment Tag
-commentTag name rest = do 
+commentTag _ _ = do 
     manyTill pNode (tagNamed "endcomment")
     return Nothing
 
@@ -67,13 +66,13 @@ ifTag name rest = do
                 (PTag "else" rest) -> do
                     nodes <- catMaybes <$> manyTill pNode (tagNamed "endif")
                     return $ Just $ Tag "if" $ TagFunc $ showIfElse ifs' nodes
-                otherwise -> unexpected "unexpected tag"
+                _ -> unexpected "unexpected tag"
         parseIfExpr s = do
             exprs <- runParseTagExpressions s
             case exprs of
                 [] -> unexpected "empty if"
                 (x : []) -> return x
-                (x : xs) -> unexpected $ show . head $ xs
+                (_ : xs) -> unexpected $ show . head $ xs
 
 -- Version of manyTill that returns the terminating token
 manyTill' p1 p2 = scan
@@ -106,7 +105,7 @@ showIfElse ((expr, left) : xs) right = do
 
 forTag name rest = do
     (target, sourceExpr) <- parseFor rest
-    (maybeNodes, (token, pos)) <- manyTill' pNode (tagNamedOneOf ["endfor", "else"])
+    (maybeNodes, (token, _)) <- manyTill' pNode (tagNamedOneOf ["endfor", "else"])
     let forNodes = catMaybes maybeNodes
     case token of
         PTag "else" _ -> do
@@ -122,10 +121,10 @@ forTag name rest = do
                 then do
                     target <- case head exprs of
                         ExprVar x -> return x
-                        otherwise -> fail "unexpected for target"
+                        _ -> fail "unexpected for target"
                     case head $ tail exprs of
                         ExprVar "in" -> return ()
-                        otherwise -> fail "expecting 'in'"
+                        _ -> fail "expecting 'in'"
                     return $ (target, head $ tail $ tail exprs)
                 else unexpected "number of arguments"
 
@@ -141,10 +140,10 @@ showFor target sourceExpr forNodes elseNodes = do
             popValues
 
         toList (Just (JSArray vals)) = vals
-        toList otherwise = []
+        toList _ = []
 
         toJS (ExprVar x) = lookupVarM x
-        toJS otherwise = return Nothing
+        toJS _ = return Nothing
 
         pushValues kvpairs = do
             st <- getRenderState

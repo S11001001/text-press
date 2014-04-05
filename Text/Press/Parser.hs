@@ -15,11 +15,9 @@ module Text.Press.Parser
 
 import Control.Applicative ((<|>), (*>))
 import Data.Char (isSpace)
-import Data.Either (Either(..))
-import Data.Function (on)
 import Data.Functor ((<$>))
-import Data.Map (fromList, Map, lookup, insert)
-import Data.Maybe (catMaybes, listToMaybe)
+import Data.Map (lookup)
+import Data.Maybe (catMaybes)
 import Prelude hiding (lookup)
 
 import qualified Text.Parsec as Parsec
@@ -29,11 +27,10 @@ import Text.Parsec.Pos (SourcePos, sourceName)
 import Text.Parsec.Prim (Parsec, getPosition, getState)
 import qualified Text.Parsec.Prim as Parsec.Prim
 import Text.Parser.Char (alphaNum, anyChar, letter, oneOf, space, string)
-import Text.Parser.Combinators (choice, eof, many, manyTill, notFollowedBy, optional, sepEndBy, skipMany, some, try)
+import Text.Parser.Combinators (choice, eof, many, manyTill, optional, sepEndBy, skipMany, some, try)
 import Text.Parser.LookAhead (lookAhead)
 
 import Text.Press.Types
-import Text.Press.Render 
 
 intermediateParser = manyTill intermediate eof 
     
@@ -84,21 +81,21 @@ parseString parser string =
 tokensToTemplate :: Parsec [(Token, SourcePos)] ParserState Template 
 tokensToTemplate = do 
     nodes <- catMaybes <$> many pNode 
-    (p, t) <- getState
+    (_, t) <- getState
     return $ t {tmplNodes=nodes}
 
 pNode = choice [pVar, pTag, pText]
 
 pVar = do
-    (PVar x, pos) <- var 
+    (PVar x, _) <- var 
     return $ Just $ Var $ strip x
 
 pText = do
-    (PText x, pos) <- text
+    (PText x, _) <- text
     return $ Just $ Text x 
 
 pTag = do 
-    ((PTag name rest), pos) <- tag
+    ((PTag name rest), _) <- tag
     (parser, _) <- getState
     case lookup name (parserTagTypes parser) of 
         Nothing -> fail ("unknown tag: " ++ show name)
@@ -114,25 +111,25 @@ tagNamedOneOf name = token' $ toMaybe $ (isTagNamedOneOf name) . fst
 toMaybe f tokpos = if (f tokpos) then Just tokpos else Nothing
 
 isVar (PVar _) = True
-isVar otherwise = False
+isVar _ = False
 
 isTag (PTag _ _) = True
-isTag otherwise = False
+isTag _ = False
 
 isTagNamed aname tag = isTagNamedOneOf [aname] tag
 
 isTagNamedOneOf names (PTag name _) = name `elem` names
-isTagNamedOneOf names otherwise = False
+isTagNamedOneOf _ _ = False
 
 isText (PText _) = True
-isText otherwise = False
+isText _ = False
 
 strip = f . f
     where f = reverse . dropWhile isSpace
 
 failWithParseError :: (Parsec.Prim.Stream s m t) => Parsec.Error.ParseError -> Parsec.Prim.ParsecT s u m a
 failWithParseError parseError = Parsec.Prim.mkPT $ 
-    \s -> return $ Parsec.Prim.Empty $ return $ Parsec.Prim.Error parseError
+    \_ -> return $ Parsec.Prim.Empty $ return $ Parsec.Prim.Error parseError
 
 runSubParser parser state input = do
     name <- fmap sourceName getPosition
