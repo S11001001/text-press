@@ -32,6 +32,7 @@ import Text.Parser.LookAhead (lookAhead)
 
 import Text.Press.Types
 
+-- | The parser of 'Expr's with unresolved 'Tag's.
 intermediateParser = manyTill intermediate eof 
     
 intermediate = choice [try parseTag, try parseVar, someText]
@@ -101,12 +102,12 @@ pTag = do
         Nothing -> fail ("unknown tag: " ++ show name)
         Just (TagType t) -> t name rest
 
-token' x = Parsec.Prim.token (show . fst) (snd) x
-var = token' $ toMaybe $ isVar . fst
-text = token' $ toMaybe $ isText . fst
-tag = token' $ toMaybe $ isTag . fst
-tagNamed name = token' $ toMaybe $ (isTagNamed name) . fst
-tagNamedOneOf name = token' $ toMaybe $ (isTagNamedOneOf name) . fst
+token' p = Parsec.Prim.token (show . fst) (snd) $ toMaybe $ p . fst
+var = token' isVar
+text = token' isText
+tag = token' isTag
+tagNamed name = token' (isTagNamed name)
+tagNamedOneOf name = token' (isTagNamedOneOf name)
 
 toMaybe :: (a -> Bool) -> a -> Maybe a
 toMaybe f tokpos = if (f tokpos) then Just tokpos else Nothing
