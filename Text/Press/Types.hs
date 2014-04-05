@@ -2,6 +2,7 @@ module Text.Press.Types
   (
   -- * Templates
     Template(..)
+  , TemplatePath
   , Node(..)
   , TagFunc(..)
   , PressError(..)
@@ -35,6 +36,7 @@ import qualified Text.Parsec.Error
 import Text.Parsec.Pos (SourcePos)
 import Text.JSON (JSValue)
 
+-- | The state member of 'RenderT'.
 data RenderState = RenderState {
     renderStateParser :: Parser,
     renderStateTemplate :: Template,
@@ -50,13 +52,19 @@ instance Error PressError where
     noMsg = PressError "Some rendering error"
     strMsg s = PressError s
 
-type RenderT a = WriterT [String] (StateT RenderState (ErrorT PressError IO)) a
+-- | The transformer stack for template-rendering actions, applied to
+-- 'IO'.
+type RenderT = WriterT [String] (StateT RenderState (ErrorT PressError IO))
+
+-- | A 'RenderT' with no value.
 type RenderT_ = RenderT ()
 
+-- | Type-constrained 'get'.
 getRenderState :: RenderT RenderState
 --getRenderState = lift $ lift $ get
 getRenderState = get
 
+-- | Type-constrained 'put'.
 setRenderState :: RenderState -> RenderT ()
 setRenderState = put
 
