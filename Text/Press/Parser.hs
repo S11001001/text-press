@@ -61,7 +61,6 @@ parseTag = withPos $ do
     skipMany space
     rest <- manyTill anyChar (string "%}")
     return $ PTag name rest 
-    where 
 
 identifier = do 
     l <- choice [letter, oneOf "_"]
