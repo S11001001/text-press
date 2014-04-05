@@ -1,4 +1,12 @@
-module Text.Press.Render where
+module Text.Press.Render
+  (
+  -- * Rendering whole templates
+    doRender
+  -- * Template rendering subprocesses
+  , lookupVarM
+  , showBlock
+  , coerceJSToBool
+  ) where
 
 import Control.Monad.State
 import Control.Monad.Writer.Lazy
@@ -33,6 +41,8 @@ instance Render JSValue where
     render (JSString x) = emit $ fromJSString x
     render other = emit $ (showJSValue other) ""
 
+-- | Find a variable.
+lookupVarM :: String -> RenderT (Maybe JSValue)
 lookupVarM name = do 
     st <- getRenderState 
     return $ lookupVar name st
@@ -56,7 +66,7 @@ getf name a = getf' names (Just a)
         getf' (x : xs) obj@(Just (JSObject a)) = getf' xs $ get_field a x
         getf' x y = Nothing    
 
--- Show a block
+-- | Show a block.
 showBlock :: String -> RenderT_ 
 showBlock blockName = do
     templates <- templateStack
@@ -81,10 +91,13 @@ templateStack = getTemplate >>= templateStack'
                     return $ t : (template : templates)
                 Nothing -> throwError $ PressError $ "expecting a template in the cache named: " ++ (show name)
 
+
+doRender :: RenderT ()
 doRender = do 
     bodyNodes <- fmap (tmplNodes . last) templateStack
-    mapM render bodyNodes
+    mapM_ render bodyNodes
 
+-- | The Jinja-truthiness of a given 'JSValue'.
 coerceJSToBool :: JSValue -> Bool
 coerceJSToBool JSNull = False 
 coerceJSToBool (JSBool bool) = bool
