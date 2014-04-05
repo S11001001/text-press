@@ -93,7 +93,8 @@ addToTemplateCache template = do
                     put $ parser {parserTemplateCache = mapping'}
                     forM_ (tmplExtends tmpl) addToTemplateCache
 
--- | A whole-template 'Parser', with 'defaultTagTypes' defined, for
--- use with 'parseFile' or 'parseString'.
+-- | Configuration for the whole-template parsing process, with
+-- 'defaultTagTypes' defined, for use with 'parseFile' or
+-- 'parseString'.
 defaultParser :: Parser
 defaultParser = newParser { parserTagTypes = defaultTagTypes }
