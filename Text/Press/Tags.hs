@@ -7,7 +7,7 @@ import Data.Functor ((<$>))
 import Data.Map (fromList, insert)
 import Data.Maybe (catMaybes)
 import qualified Text.Parsec.Prim as Parsec.Prim
-import Text.Parsec.Combinator (manyTill, choice)
+import Text.Parser.Combinators (choice, manyTill, unexpected)
 import Control.Monad.Trans (lift, liftIO)
 import Control.Monad (forM_)
 
@@ -28,7 +28,7 @@ blockTag name rest = do
     exprs <- runParseTagExpressions rest
     blockName <- case exprs of
         (ExprVar var : xs) -> return var
-        otherwise -> Parsec.Prim.unexpected (show otherwise)
+        otherwise -> unexpected (show otherwise)
     nodes <- catMaybes <$> manyTill pNode (tagNamed "endblock")
     Parsec.Prim.modifyState $ \(parser, tmpl) -> (parser,
         tmpl {tmplBlocks = insert blockName nodes (tmplBlocks tmpl)})
@@ -67,13 +67,13 @@ ifTag name rest = do
                 (PTag "else" rest) -> do
                     nodes <- catMaybes <$> manyTill pNode (tagNamed "endif")
                     return $ Just $ Tag "if" $ TagFunc $ showIfElse ifs' nodes
-                otherwise -> Parsec.Prim.unexpected "unexpected tag"
+                otherwise -> unexpected "unexpected tag"
         parseIfExpr s = do
             exprs <- runParseTagExpressions s
             case exprs of
-                [] -> Parsec.Prim.unexpected "empty if"
+                [] -> unexpected "empty if"
                 (x : []) -> return x
-                (x : xs) -> Parsec.Prim.unexpected $ show . head $ xs
+                (x : xs) -> unexpected $ show . head $ xs
 
 -- Version of manyTill that returns the terminating token
 manyTill' p1 p2 = scan
@@ -127,7 +127,7 @@ forTag name rest = do
                         ExprVar "in" -> return ()
                         otherwise -> fail "expecting 'in'"
                     return $ (target, head $ tail $ tail exprs)
-                else Parsec.Prim.unexpected "number of arguments"
+                else unexpected "number of arguments"
 
 showFor :: String -> Expr -> [Node] -> [Node] -> RenderT_
 showFor target sourceExpr forNodes elseNodes = do
