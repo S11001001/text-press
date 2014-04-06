@@ -12,7 +12,7 @@ import Data.Map (Map, fromList, insert)
 import Data.Maybe (catMaybes)
 import qualified Text.Parsec.Prim as Parsec.Prim
 import Text.Parser.Combinators (manyTill, unexpected)
-import Control.Monad (forM_)
+import Control.Monad (forM_, liftM)
 
 import Text.Press.Parser
 import Text.Press.Render
@@ -38,7 +38,7 @@ blockTag name rest = do
     return $ Just $ Tag "block" $ TagFunc $ showBlock blockName
 
 -- | This is mapping of all of the default tag types. 
-defaultTagTypes :: Map String TagType
+defaultTagTypes :: Map String (TagType IO)
 defaultTagTypes = (fromList [
     ("extends", TagType extendsTag),
     ("block", TagType blockTag),
@@ -89,7 +89,7 @@ manyTill' p1 p2 = scan
                    return ([], y)
 
 -- Evaluate an expression to a boolean suitable for an If clase
-exprToBool :: Expr -> RenderT Bool
+exprToBool :: Monad m => Expr -> RenderT m Bool
 exprToBool expr =
     case expr of
        ExprStr s -> return $ not (null s)
@@ -100,7 +100,7 @@ exprToBool expr =
                 Nothing -> return False
                 Just val -> return $ coerceJSToBool val
 
-showIfElse :: [(Expr, [Node])] -> [Node] -> RenderT_
+showIfElse :: Monad m => [(Expr, [Node m])] -> [Node m] -> RenderT_ m
 showIfElse [] right = mapM_ render right
 showIfElse ((expr, left) : xs) right = do
     succ <- exprToBool expr
@@ -133,9 +133,9 @@ forTag name rest = do
                     return $ (target, head $ tail $ tail exprs)
                 else unexpected "number of arguments"
 
-showFor :: String -> Expr -> [Node] -> [Node] -> RenderT_
+showFor :: Monad m => String -> Expr -> [Node m] -> [Node m] -> RenderT_ m
 showFor target sourceExpr forNodes elseNodes = do
-        sourceValues <- toList <$> toJS sourceExpr
+        sourceValues <- liftM toList (toJS sourceExpr)
         runFor sourceValues
     where
         runFor [] = mapM_ render elseNodes

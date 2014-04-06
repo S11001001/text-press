@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeFamilies #-}
+
 module Text.Press.Render
   (
   -- * Rendering whole templates
@@ -24,7 +26,9 @@ import Text.Press.Types
 
 emit s = tell [s]
 
-instance Render Node where 
+instance Render (Node m) where 
+    type RenderIn (Node m) n = (Monad m, m ~ n)
+
     render (Text s) = emit s
     render (Var var) = do
         context <- getRenderState
@@ -33,16 +37,20 @@ instance Render Node where
             Just jsval -> render jsval
     render (Tag _ f) = render f 
 
-instance Render TagFunc where
+instance Render (TagFunc m) where
+    type RenderIn (TagFunc m) n = (m ~ n)
+
     render (TagFunc f) = f 
 
 instance Render JSValue where 
+    type RenderIn JSValue m = Monad m
+
     render JSNull = emit ""
     render (JSString x) = emit $ fromJSString x
     render other = emit $ (showJSValue other) ""
 
 -- | Find a variable.
-lookupVarM :: String -> RenderT (Maybe JSValue)
+lookupVarM :: Monad m => String -> RenderT m (Maybe JSValue)
 lookupVarM name = do 
     st <- getRenderState 
     return $ lookupVar name st
@@ -68,7 +76,7 @@ getf name a = getf' names (Just a)
         getf' _ _ = Nothing    
 
 -- | Show a block.
-showBlock :: String -> RenderT_ 
+showBlock :: String -> RenderT_ IO
 showBlock blockName = do
     templates <- templateStack
     let maybeNodes = lookupFirst blockName $ map tmplBlocks $ templates
@@ -94,7 +102,7 @@ templateStack = getTemplate >>= templateStack'
 
 -- | Render the environment's template with the environment's defined
 -- variables.
-doRender :: RenderT ()
+doRender :: RenderT IO ()
 doRender = do 
     bodyNodes <- fmap (tmplNodes . last) templateStack
     mapM_ render bodyNodes

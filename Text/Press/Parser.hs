@@ -14,6 +14,7 @@ module Text.Press.Parser
   ) where
 
 import Control.Applicative ((<|>), (*>))
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Char (isSpace)
 import Data.Functor ((<$>))
 import Data.Map (lookup)
@@ -67,19 +68,19 @@ identifier = do
 
 parseVar = withPos $ PVar <$> between "{{" "}}"
 
-parseFile :: Parser -> String -> IO (Either Parsec.ParseError Template)
+parseFile :: MonadIO m => Parser m -> String -> m (Either Parsec.ParseError (Template m))
 parseFile parser filename = do
-    eitherTokens <- parseFromFile intermediateParser filename    
+    eitherTokens <- liftIO $ parseFromFile intermediateParser filename    
     return $ either Left (Parsec.Prim.runParser tokensToTemplate (parser, newTemplate) filename) eitherTokens
 
-parseString :: Parser -> String -> Either Parsec.ParseError Template
+parseString :: Parser m -> String -> Either Parsec.ParseError (Template m)
 parseString parser string =
     either Left
            (Parsec.Prim.runParser tokensToTemplate (parser, newTemplate) "")
          $ Parsec.Prim.runParser intermediateParser () "" string
 
 
-tokensToTemplate :: Parsec [(Token, SourcePos)] ParserState Template 
+tokensToTemplate :: Parsec [(Token, SourcePos)] (ParserState m) (Template m)
 tokensToTemplate = do 
     nodes <- catMaybes <$> many pNode 
     (_, t) <- getState
